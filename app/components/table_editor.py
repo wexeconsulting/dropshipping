@@ -2,6 +2,8 @@ from typing import Any, List
 import pandas as pd
 import streamlit as st
 import logging
+import time
+import threading
 from copy import deepcopy
 from utils.db import update_margin
 
@@ -27,6 +29,16 @@ class TableEditor:
         self.editable_columns = editable_columns
         logging.info("TableEditor initialized with dataframe")
 
+    def display_error_message(self, message: str, duration: int = 2) -> None:
+        error_placeholder = st.empty()
+        error_placeholder.error(message)
+        
+        def remove_error():
+            time.sleep(duration)
+            error_placeholder.empty()
+        
+        threading.Thread(target=remove_error).start()
+
     def process_edit(self) -> None:
         logging.info("Edit")
         # Compare the updated self.dataframe (updated via display_table) with the original dataframe.
@@ -41,6 +53,10 @@ class TableEditor:
             for index, row in changed_rows_edited.iterrows():
                 logging.info("Processing row: %s", row)
                 margin = calculate_margin(row["gross_price"], row["tax_rate"], row["price"])
+                if margin < 0:
+                    self.display_error_message("Margin cannot be below 0")
+                    row["gross_price"] = row["price"] * (1+row["margin"]) * (1 + row["tax_rate"])
+                    continue
                 logging.info('EAN: %s', row["ean"])
                 logging.info('Margin: %s', margin)
                 update_margin(1, row["ean"], margin)

@@ -25,3 +25,14 @@ margin_data (
     primary key (ean, configs_id)
 );
 
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM configs
+        WHERE name = 'HomeGarden'
+    ) THEN
+        INSERT INTO configs ("name", value, url) VALUES
+            ('HomeGarden', '{"fields": {"ean": "Ean", "name": "Nazwa", "price": "Cena_zakupu_netto", "photos": {"prefix": "image_extra_", "firstElem": "image", "collection": "Linki_do_zdjec/Link_do_zdjecia", "maxMappedElems": 16}, "quantity": "Stan_mag", "tax_rate": "Vat", "description": "Opis", "category_name": "Kategoria", "manufacturer_name": "Marka"}, "defaultMargin": 0.2, "product_index": "./Produkt"}', 'https://pim.homegarden.com.pl/feeds/vip-h2g5xfm456');
+    END IF;
+END $$;
