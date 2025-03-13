@@ -29,19 +29,10 @@ class TableEditor:
         self.editable_columns = editable_columns
         logging.info("TableEditor initialized with dataframe")
 
-    def display_error_message(self, message: str, duration: int = 2) -> None:
-        error_placeholder = st.empty()
-        error_placeholder.error(message)
-        
-        def remove_error():
-            time.sleep(duration)
-            error_placeholder.empty()
-        
-        threading.Thread(target=remove_error).start()
-
     def process_edit(self) -> None:
         logging.info("Edit")
         # Compare the updated self.dataframe (updated via display_table) with the original dataframe.
+        self.dataframe["gross_price"] = self.dataframe["gross_price"].str.replace(" ", "").str.replace(",", ".").astype(float)
         diff = self.original_dataframe.compare(self.dataframe)
 
         if not diff.empty:
@@ -53,18 +44,18 @@ class TableEditor:
             for index, row in changed_rows_edited.iterrows():
                 logging.info("Processing row: %s", row)
                 margin = calculate_margin(row["gross_price"], row["tax_rate"], row["price"])
-                if margin < 0:
-                    self.display_error_message("Margin cannot be below 0")
-                    row["gross_price"] = row["price"] * (1+row["margin"]) * (1 + row["tax_rate"])
-                    continue
                 logging.info('EAN: %s', row["ean"])
                 logging.info('Margin: %s', margin)
+                if margin < 0:
+                    st.error(f"Margin for EAN {row['ean']} is negative. Reverting changes.")
+                    self.dataframe.loc[index, "gross_price"] = self.original_dataframe.loc[index, "gross_price"]
+                    continue
                 update_margin(1, row["ean"], margin)
                 orig_df = st.session_state.dfkeeper.full_dataframe
                 orig_df.loc[index, "gross_price"] = row["gross_price"]
                 orig_df.loc[index, "margin"] = margin
                 st.session_state.dfkeeper = DfKeeper(orig_df)
-            self.dataframe = deepcopy(self.original_dataframe)
+            #self.dataframe = deepcopy(self.original_dataframe)
             st.session_state.data_updated = True
             st.session_state.df = deepcopy(st.session_state.dfkeeper.full_dataframe)
         else:
@@ -73,13 +64,31 @@ class TableEditor:
 
     def display_table(self):
         # Build column config to only allow editing for columns in editable_columns.
-        column_config = {}
-        for col in self.dataframe.columns:
-            if col in self.editable_columns:
-                column_config[col] = {"disabled": False}
-            else:
-                column_config[col] = {"disabled": True}
-        # Remove the on_change callback.
+        if type(self.dataframe["gross_price"][0]) != str:
+            self.dataframe["gross_price"] = self.dataframe["gross_price"].apply(lambda x: f"{x:,.2f}".replace(",", " ").replace(".", ","))
+            max_length = self.dataframe["gross_price"].str.len().max()
+            self.dataframe["gross_price"] = self.dataframe["gross_price"].apply(lambda x: x.rjust(max_length))
+
+        self.dataframe = self.dataframe.style.format(
+            {
+                
+                "price": lambda x : '{:,.2f}'.format(x),
+            },
+            thousands=' ',
+            decimal=',',
+        )
+        column_config = {
+            "gross_price": st.column_config.TextColumn("Cena brutto", disabled=False),
+            #"gross_price": st.column_config.NumberColumn("Cena dostawcy", disabled=False),
+            "tax_rate": st.column_config.NumberColumn("VAT", format="percent", disabled=True),
+            "price": st.column_config.NumberColumn("Cena dostawcy", disabled=True),
+            "ean": st.column_config.TextColumn("EAN", disabled=True),
+            "margin": st.column_config.NumberColumn("Marża", format="percent", disabled=True),
+            "name": st.column_config.TextColumn("Nazwa", disabled=True),
+            "category_name": st.column_config.TextColumn("Kategoria", disabled=True),
+            "quantity": st.column_config.NumberColumn("Ilość", disabled=True),
+        }
+
         edited_dataframe = st.data_editor(
             self.dataframe,
             key="data_editor",
@@ -87,9 +96,9 @@ class TableEditor:
             hide_index=True,
             column_config=column_config
         )
-        # Update the instance variable with the edited dataframe.
         self.dataframe = edited_dataframe
-        # Manually call the process_edit method to detect changes.
         self.process_edit()
+        # if "error_msg" in st.session_state and st.session_state.error_msg:
+        #    st.error(st.session_state.error_msg)
         logging.info("Table displayed and edited")
         return edited_dataframe
