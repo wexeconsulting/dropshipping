@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import numpy as np
 import logging
 from components.table_editor import TableEditor, DfKeeper
 from utils.parser_manager import load_data_for_frontend
@@ -14,31 +14,35 @@ def page_load():
 def main():
     page_load()
     st.title("Dropshipping Margin Editor")
+    logging.info("-----------------------------------------")
     logging.info("Application started")
+    logging.info("-----------------------------------------")
 
     if 'df' in st.session_state:
         df = st.session_state.df
 
         checkbox_state = st.checkbox("Show only modified margins", value=False, key="checkbox_modified")
         if checkbox_state != st.session_state.get('checkbox_modified', False):
-            st.session_state.checkbox_modified = checkbox_state
-            st.rerun()
+           st.session_state.checkbox_modified = checkbox_state
+           st.rerun()
 
-        #modified_session_chbx = st.checkbox("Show only modified in this session", value=True, key="modified_session_chbx")
-        #modified_all_chbx = st.checkbox("Show only modified in this session", value=True, key="modified_all_chbx")
-
-        # Add a text input for searching by 'ean'
         ean_search = st.text_input("Search by EAN", "")
         displayed_df = st.session_state.df
 
         if ean_search:
             displayed_df = displayed_df[displayed_df['ean'].astype(str).str.contains(ean_search, na=False)]
         
+        print(displayed_df)
         if st.session_state.checkbox_modified:
-            displayed_df = displayed_df[displayed_df['margin'] != 0.2]
-        
+            displayed_df['margin'] = displayed_df['margin'].astype(float)
+            displayed_df = displayed_df[displayed_df['margin'].notna()]
+            displayed_df = displayed_df[~np.isclose(displayed_df['margin'], 0.2, atol=1e-4)]        
+            
         
         editable_columns = ['gross_price']  # modify as needed
+        if len(displayed_df) == 0:
+            st.write("No data found")
+            st.stop()
         editor = TableEditor(dataframe=displayed_df, editable_columns=editable_columns)
         edited_df = editor.display_table()
     
