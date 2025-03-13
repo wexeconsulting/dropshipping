@@ -10,6 +10,17 @@ from utils.db import update_margin
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+COLUMNS_CONFIG = {
+            "gross_price": st.column_config.TextColumn("Cena brutto", disabled=False),
+            "tax_rate": st.column_config.NumberColumn("VAT", format="percent", disabled=True),
+            "price": st.column_config.NumberColumn("Cena dostawcy", disabled=True),
+            "ean": st.column_config.TextColumn("EAN", disabled=True),
+            "margin": st.column_config.NumberColumn("Marża", format="percent", disabled=True),
+            "name": st.column_config.TextColumn("Nazwa", disabled=True),
+            "category_name": st.column_config.TextColumn("Kategoria", disabled=True),
+            "quantity": st.column_config.NumberColumn("Ilość", disabled=True),
+        }
+
 def calculate_margin(gross_price, tax_rate, original_price):
     margin = (gross_price / (1+tax_rate) - original_price) / original_price
     return margin
@@ -23,15 +34,13 @@ class DfKeeper:
         self.full_dataframe = deepcopy(dataframe)
 
 class TableEditor:
-    def __init__(self, dataframe: pd.DataFrame, editable_columns: List[str]):
+    def __init__(self, dataframe: pd.DataFrame):
         self.dataframe = dataframe
         self.original_dataframe = deepcopy(self.dataframe)
-        self.editable_columns = editable_columns
         logging.info("TableEditor initialized with dataframe")
 
     def process_edit(self) -> None:
         logging.info("Edit")
-        # Compare the updated self.dataframe (updated via display_table) with the original dataframe.
         self.dataframe["gross_price"] = self.dataframe["gross_price"].str.replace(" ", "").str.replace(",", ".").astype(float)
         diff = self.original_dataframe.compare(self.dataframe)
 
@@ -60,11 +69,9 @@ class TableEditor:
             st.session_state.df = deepcopy(st.session_state.dfkeeper.full_dataframe)
         else:
             logging.info("No changes detected")
-        # Update the original dataframe for further diffing.
 
     def display_table(self):
-        # Build column config to only allow editing for columns in editable_columns.
-        if type(self.dataframe["gross_price"][0]) != str:
+        if not self.dataframe.empty and not isinstance(self.dataframe["gross_price"].iloc[0], str):
             self.dataframe["gross_price"] = self.dataframe["gross_price"].apply(lambda x: f"{x:,.2f}".replace(",", " ").replace(".", ","))
             max_length = self.dataframe["gross_price"].str.len().max()
             self.dataframe["gross_price"] = self.dataframe["gross_price"].apply(lambda x: x.rjust(max_length))
@@ -77,28 +84,15 @@ class TableEditor:
             thousands=' ',
             decimal=',',
         )
-        column_config = {
-            "gross_price": st.column_config.TextColumn("Cena brutto", disabled=False),
-            #"gross_price": st.column_config.NumberColumn("Cena dostawcy", disabled=False),
-            "tax_rate": st.column_config.NumberColumn("VAT", format="percent", disabled=True),
-            "price": st.column_config.NumberColumn("Cena dostawcy", disabled=True),
-            "ean": st.column_config.TextColumn("EAN", disabled=True),
-            "margin": st.column_config.NumberColumn("Marża", format="percent", disabled=True),
-            "name": st.column_config.TextColumn("Nazwa", disabled=True),
-            "category_name": st.column_config.TextColumn("Kategoria", disabled=True),
-            "quantity": st.column_config.NumberColumn("Ilość", disabled=True),
-        }
 
         edited_dataframe = st.data_editor(
             self.dataframe,
             key="data_editor",
             use_container_width=True,
             hide_index=True,
-            column_config=column_config
+            column_config=COLUMNS_CONFIG
         )
         self.dataframe = edited_dataframe
         self.process_edit()
-        # if "error_msg" in st.session_state and st.session_state.error_msg:
-        #    st.error(st.session_state.error_msg)
         logging.info("Table displayed and edited")
         return edited_dataframe

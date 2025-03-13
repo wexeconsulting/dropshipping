@@ -31,19 +31,19 @@ def main():
 
         if ean_search:
             displayed_df = displayed_df[displayed_df['ean'].astype(str).str.contains(ean_search, na=False)]
-        
-        print(displayed_df)
+
         if st.session_state.checkbox_modified:
             displayed_df['margin'] = displayed_df['margin'].astype(float)
             displayed_df = displayed_df[displayed_df['margin'].notna()]
             displayed_df = displayed_df[~np.isclose(displayed_df['margin'], 0.2, atol=1e-4)]        
-            
-        
-        editable_columns = ['gross_price']  # modify as needed
+
         if len(displayed_df) == 0:
             st.write("No data found")
             st.stop()
-        editor = TableEditor(dataframe=displayed_df, editable_columns=editable_columns)
+        if displayed_df.empty:
+            st.write("No data found")
+            st.stop()
+        editor = TableEditor(dataframe=displayed_df)
         edited_df = editor.display_table()
     
         if st.session_state.get('data_updated', False):
@@ -54,8 +54,7 @@ def main():
         st.write("Loading data...")
         if 1==1:
             logging.info("Loading dataframe at init")
-            
-            # TODO: test data implemented for now
+
             df = load_data_for_frontend(1)
             
             st.session_state.df = df
