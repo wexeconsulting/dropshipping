@@ -9,10 +9,12 @@ import time
 import os
 import sys
 
+from utils.parser_manager import run_batch_task
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Create separate loggers
 job_logger = logging.getLogger('job_execution')
@@ -20,6 +22,8 @@ scheduler_logger = logging.getLogger('scheduler_maintenance')
 
 def execute_job(job_id, parameters):
     job_logger.info(f"Executing Job {job_id} with parameters {parameters}")
+    run_batch_task(1)
+
 
 scheduler = BackgroundScheduler()
 scheduler.start()

@@ -11,9 +11,9 @@ from utils.db import update_margin
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 COLUMNS_CONFIG = {
-            "gross_price": st.column_config.TextColumn("Cena brutto", disabled=False),
+            "gross_price": st.column_config.TextColumn("Cena sprzedaży brutto", disabled=False),
             "tax_rate": st.column_config.NumberColumn("VAT", format="percent", disabled=True),
-            "price": st.column_config.NumberColumn("Cena dostawcy", disabled=True),
+            "price": st.column_config.NumberColumn("Cena zakupu netto", disabled=True),
             "ean": st.column_config.TextColumn("EAN", disabled=True),
             "margin": st.column_config.NumberColumn("Marża", format="percent", disabled=True),
             "name": st.column_config.TextColumn("Nazwa", disabled=True),

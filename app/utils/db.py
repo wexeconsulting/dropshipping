@@ -8,7 +8,6 @@ db_conn = psycopg2.connect(
         dbname=os.getenv('POSTGRES_DB', 'db'),
         user=os.getenv('POSTGRES_USER', 'postgres'),
         password=os.getenv('POSTGRES_PASSWORD', 'pass'),
-        #host='db',
         host=os.getenv('POSTGRES_HOST', 'db'),
         port=5432
     )
