@@ -35,8 +35,14 @@ def parse_df_to_result_xml(df):
         for key, value in row.items():
             elem = ET.SubElement(product_elem, key)
             if pd.notna(value):
-                elem.text = f"<![CDATA[{value}]]>" if key in ["manufacturer_name", "name", "category_name", "description", "image", "image_extra_1", "image_extra_2", "image_extra_3", "image_extra_4", "image_extra_5", "image_extra_6", "image_extra_7", "image_extra_8"] else str(value)
+                if key in ["manufacturer_name", "name", "category_name", "description", "image", "image_extra_1", "image_extra_2", "image_extra_3", "image_extra_4", "image_extra_5", "image_extra_6", "image_extra_7", "image_extra_8"]:
+                    elem.text = f'<![CDATA[{value}]]>'
+                else:
+                    elem.text = str(value)
             else:
                 elem.text = ""
     xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
-    return xml_declaration + ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
+    xml_str = ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
+    # Replace escaped CDATA
+    xml_str = xml_str.replace('&lt;![CDATA[', '<![CDATA[').replace(']]&gt;', ']]>')
+    return xml_declaration + xml_str
