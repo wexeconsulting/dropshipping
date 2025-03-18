@@ -21,8 +21,9 @@ job_logger = logging.getLogger('job_execution')
 scheduler_logger = logging.getLogger('scheduler_maintenance')
 
 def execute_job(job_id, parameters):
-    job_logger.info(f"Executing Job {job_id} with parameters {parameters}")
+    job_logger.info(f"-- Executing Job {job_id} with parameters {parameters}")
     run_batch_task(1)
+    job_logger.info(f"-- Job execution ended")
 
 
 scheduler = BackgroundScheduler()

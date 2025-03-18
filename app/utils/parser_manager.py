@@ -5,6 +5,9 @@ from utils.xml_parser import parse_df_to_result_xml
 from utils.ftp_connector import load_file_to_ftp
 import os
 
+#for testing only
+from utils.xml_test import run_tests
+
 
 def main_df_parser(config_id):
     name, settings, url = get_config_settings(config_id)
@@ -28,9 +31,11 @@ def run_batch_task(config_id):
     with open(file_path, "w") as file:
         file.write(result_xml)
     
+    run_tests()
+
     HOST = os.getenv("FTP_HOST")
     USER = os.getenv("FTP_USERNAME")
     PASSWORD = os.getenv("FTP_PASSWORD")
 
     load_file_to_ftp(file_path, HOST, USER, PASSWORD)
-    os.remove(file_path)
+    #os.remove(file_path)
