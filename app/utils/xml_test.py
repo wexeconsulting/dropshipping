@@ -29,8 +29,8 @@ class TestXMLStructure(unittest.TestCase):
                 self.assertEqual(root.tag, "products", "Root element should be <products>")
                 logging.debug(f"Root element: {root.tag}")
                 
-                elem_correct = 0
-                elem_err = 0
+                elem_correct1 = 0
+                elem_correct2 = 0
 
                 # Check each <product> element
                 for product in root.findall("product"):
@@ -39,13 +39,13 @@ class TestXMLStructure(unittest.TestCase):
 
                     # Check if all expected tags are present
                     self.assertTrue(self.expected_tags.issubset(tags), "Some expected tags are missing")
-                    elem_correct += 1
+                    elem_correct1 += 1
                     
                     # Check if there are no unexpected tags
                     self.assertTrue(tags.issubset(self.expected_tags), "Unexpected tags found in XML")
-                    elem_err += 1
-                logging.info(f"Correct elements: {elem_correct}")
-                logging.info(f"Error elements: {elem_err}")
+                    elem_correct2 += 1
+                logging.info(f"Correct elements (all expected tags): {elem_correct1}")
+                logging.info(f"Correct elements (no unexpected tags): {elem_correct2}")
 
 def run_tests():
     """Run the XML structure test and return the results as a string."""
