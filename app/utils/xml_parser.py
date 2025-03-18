@@ -44,5 +44,5 @@ def parse_df_to_result_xml(df):
     xml_declaration = '<?xml version="1.0" encoding="utf-8"?>\n'
     xml_str = ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
     # Replace escaped CDATA
-    xml_str = xml_str.replace('&lt;![CDATA[', '<![CDATA[').replace(']]&gt;', ']]>')
+    xml_str = xml_str.replace('&lt;', '<').replace('&gt;', '>')
     return xml_declaration + xml_str
