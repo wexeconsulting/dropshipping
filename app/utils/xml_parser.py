@@ -29,8 +29,9 @@ def parse_xml_to_dict(xml_content, mapping):
     return result
 
 def parse_df_to_result_xml(df):
-    df = df.rename(columns={"gross_price": "price"})
     df = df.drop(columns=["margin"])
+    df = df.drop(columns=["price"])
+    df = df.rename(columns={"gross_price": "price"})
     root = ET.Element("products")
     for _, row in df.iterrows():
         product_elem = ET.SubElement(root, "product")
