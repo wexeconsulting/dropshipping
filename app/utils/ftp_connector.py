@@ -1,7 +1,8 @@
 import os
-from ftplib import FTP_TLS
+from ftplib import FTP
 import hashlib
 import logging
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,8 +29,7 @@ def load_file_to_ftp(file_path, ftp_host, ftp_user, ftp_password):
         local_md5 = calculate_md5(file_path)
         logger.info(f"Local MD5: {local_md5}")
 
-        ftp = FTP_TLS(ftp_host)
-        ftp.prot_p()
+        ftp = FTP(ftp_host)
         ftp.login(user=ftp_user, passwd=ftp_password)
         logger.info(f"Connected to FTP server: {ftp_host}")
 
