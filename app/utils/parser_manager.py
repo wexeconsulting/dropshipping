@@ -11,7 +11,7 @@ from utils.xml_test import run_tests
 
 def main_df_parser(config_id):
     name, settings, url = get_config_settings(config_id)
-    default_margin = settings.get("default_margin", 0.2)
+    default_margin = settings.get("defaultMargin", 0.2)
     margins_dict = get_margins(config_id)
     payload = send_get_request(url)
     df = parse_xml_to_dataframe(payload, settings)
