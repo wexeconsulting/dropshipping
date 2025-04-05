@@ -12,7 +12,7 @@ BEGIN
         WHERE name = 'ETL_import_product_ids'
     ) THEN
         insert into jobs (name, schedule, active) 
-            values ('ETL_import_product_ids', '* 6 * * *', true);
+            values ('ETL_import_product_ids', '0 6 * * *', true);
     END IF;
 END $$;
 
