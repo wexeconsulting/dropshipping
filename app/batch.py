@@ -10,6 +10,7 @@ import os
 import sys
 
 from utils.parser_manager import run_batch_task
+from utils.etl import run_etl_task
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -20,9 +21,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 job_logger = logging.getLogger('job_execution')
 scheduler_logger = logging.getLogger('scheduler_maintenance')
 
-def execute_job(job_id, parameters):
-    job_logger.info(f"-- Executing Job {job_id} with parameters {parameters}")
-    run_batch_task(1)
+def execute_job(job_id, name, parameters):
+    job_logger.info(f"-- Executing Job {job_id}: {name} with parameters {parameters}")
+    if name == "HomeGarden":
+        run_batch_task(1)
+    if name == "ETL_import_product_ids":
+        run_etl_task(name)
     job_logger.info(f"-- Job execution ended")
 
 
@@ -57,7 +61,7 @@ def schedule_jobs():
         scheduler.add_job(
             execute_job,
             CronTrigger.from_crontab(schedule),
-            args=[job_id, parameters],
+            args=[job_id, name, parameters],
             id=str(job_id),
             misfire_grace_time=300  # Allow a 5-minute grace period for missed jobs
         )

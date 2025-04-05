@@ -4,14 +4,19 @@ from utils.converter import parse_xml_to_dataframe, df_processor, apply_margin_t
 from utils.xml_parser import parse_df_to_result_xml
 from utils.ftp_connector import load_file_to_ftp
 import os
+import logging
 
 #for testing only
 from utils.xml_test import run_tests
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def main_df_parser(config_id):
     name, settings, url = get_config_settings(config_id)
     default_margin = settings.get("defaultMargin", 0.2)
+    logger.info(f"Default margin: {default_margin}")
     margins_dict = get_margins(config_id)
     payload = send_get_request(url)
     df = parse_xml_to_dataframe(payload, settings)
@@ -25,6 +30,7 @@ def load_data_for_frontend(config_id):
     return df
 
 def run_batch_task(config_id):
+    logger.info(f"Running batch task for config_id: {config_id}")
     df = main_df_parser(config_id)
     result_xml = parse_df_to_result_xml(df)
     file_path = f"xml_result_{config_id}.xml"

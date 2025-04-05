@@ -1,6 +1,7 @@
 from utils.xml_parser import parse_xml_to_dict
 import pandas as pd
 import json
+from utils.db import get_product_ids
 
 def parse_xml_to_dataframe(xml_content, mapping):
     return pd.DataFrame(parse_xml_to_dict(xml_content, mapping))
@@ -27,7 +28,8 @@ def df_processor(df):
     df = df[df["price"].notnull()].copy()
     df["ean"] = df["ean"].astype(str)
     df["tax_rate"] = df["tax_rate"].apply(parse_tax_rate)
-
+    prod_ids = get_product_ids()
+    df["product_id"] = df["ean"].map(prod_ids)
     return df
 
 def apply_margin_to_df(df, margin_dict, default_margin):

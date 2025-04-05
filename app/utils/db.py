@@ -40,3 +40,23 @@ def update_margin(config_id, ean, margin):
     db_conn.commit()
     cursor.close()
 
+
+def get_product_ids() -> dict:
+    cursor = db_conn.cursor()
+    cursor.execute("SELECT ean, product_id FROM product_ean_mapping")
+    result = cursor.fetchall()
+    cursor.close()
+    product_ids_dict = {ean: product_id for ean, product_id in result}
+    return product_ids_dict
+
+
+def insert_or_update_product_ids(ean, product_id):
+    query = f"""
+    INSERT INTO product_ean_mapping (ean, product_id)
+    VALUES ('{ean}', '{product_id}')
+    ON CONFLICT (ean)
+    DO UPDATE SET product_id = EXCLUDED.product_id;
+    """
+    with db_conn.cursor() as cursor:
+        cursor.execute(query, (ean, product_id))
+        db_conn.commit()
