@@ -1,8 +1,9 @@
 import psycopg2
 import os
+import logging
 
-print(os.getenv('POSTGRES_DB', None))
-print(os.getenv('POSTGRES_PASSWORD', None))
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 db_conn = psycopg2.connect(
         dbname=os.getenv('POSTGRES_DB', 'db'),
@@ -28,6 +29,7 @@ def get_config_settings(config_id) -> tuple:
     return result #config_name, config_settings, config_url
 
 def update_margin(config_id, ean, margin):
+    logger.info(f"Updating margin: {config_id}|{ean}|{margin}")
     # check if margin for ean exists:
     cursor = db_conn.cursor()
     print(f"EAN = {ean}")

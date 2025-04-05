@@ -41,14 +41,17 @@ class TableEditor:
 
     def process_edit(self) -> None:
         logging.info("Edit")
-        self.dataframe["gross_price"] = self.dataframe["gross_price"].str.replace(" ", "").str.replace(",", ".").astype(float)
-        diff = self.original_dataframe.compare(self.dataframe)
+        self.dataframe["gross_price"] = self.dataframe["gross_price"].astype(str).str.replace(" ", "").str.replace(",", ".").astype(float)
+        self.original_dataframe["gross_price"] = self.original_dataframe["gross_price"].astype(str).str.replace(" ", "").str.replace(",", ".").astype(float)
+
+        diff = self.original_dataframe[["gross_price"]].compare(self.dataframe[["gross_price"]])
 
         if not diff.empty:
             changed_rows = diff.index.tolist()
             changed_rows_edited = self.dataframe.loc[changed_rows]
 
             logging.info("Edited changed rows:\n%s", changed_rows_edited)
+            logging.info("Number of changed rows: %d", len(changed_rows_edited))
 
             for index, row in changed_rows_edited.iterrows():
                 logging.info("Processing row: %s", row)
