@@ -16,5 +16,8 @@ BEGIN
     END IF;
 END $$;
 
- 
-
+update jobs
+set schedule = '0 6 * * *',
+    parameters = '{"url": "https://panel-e.baselinker.com/inventory_export.php?hash=2842f5bb1c19498c5cfa69f0216b94be"}'
+    active = true
+where name = 'ETL_import_product_ids';

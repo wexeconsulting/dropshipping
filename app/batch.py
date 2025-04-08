@@ -8,6 +8,7 @@ import json
 import time
 import os
 import sys
+import pytz
 
 from utils.parser_manager import run_batch_task
 from utils.etl import run_etl_task
@@ -26,7 +27,7 @@ def execute_job(job_id, name, parameters):
     if name == "HomeGarden":
         run_batch_task(1)
     if name == "ETL_import_product_ids":
-        run_etl_task(name)
+        run_etl_task(name, parameters)
     job_logger.info(f"-- Job execution ended")
 
 
@@ -55,12 +56,15 @@ def schedule_jobs():
             scheduler.remove_job(job.id)
     jobs = fetch_jobs()
 
+    # Define the desired timezone
+    timezone = pytz.timezone(os.getenv('SCHEDULER_TIMEZONE', 'UTC'))
+
     for job in jobs:
         job_id, name, schedule, parameters, active = job
         scheduler_logger.info(f"Scheduling job {job_id} with schedule {schedule} and parameters {parameters}")
         scheduler.add_job(
             execute_job,
-            CronTrigger.from_crontab(schedule),
+            CronTrigger.from_crontab(schedule, timezone=timezone),
             args=[job_id, name, parameters],
             id=str(job_id),
             misfire_grace_time=300  # Allow a 5-minute grace period for missed jobs
