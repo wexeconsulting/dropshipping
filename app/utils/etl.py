@@ -1,6 +1,6 @@
 from utils.http_tools import send_get_request
 import xml.etree.ElementTree as ET
-from utils.db import insert_or_update_product_ids
+from utils.db import insert_or_update_product_ids, remove_all_product_ids_mapping
 
 def import_product_ids(config: dict):
     url = config["url"]
@@ -12,6 +12,8 @@ def import_product_ids(config: dict):
         product_id = product.find('product_id').text
         ean = product.find('ean').text
         ean_product_id_list.append((ean, product_id))
+    
+    remove_all_product_ids_mapping()
     
     for ean, product_id in ean_product_id_list:
         insert_or_update_product_ids(ean, product_id)

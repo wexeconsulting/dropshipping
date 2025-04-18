@@ -51,6 +51,11 @@ def get_product_ids() -> dict:
     product_ids_dict = {ean: product_id for ean, product_id in result}
     return product_ids_dict
 
+def remove_all_product_ids_mapping():
+    cursor = db_conn.cursor()
+    cursor.execute("DELETE FROM product_ean_mapping")
+    db_conn.commit()
+    cursor.close()
 
 def insert_or_update_product_ids(ean, product_id):
     query = f"""
