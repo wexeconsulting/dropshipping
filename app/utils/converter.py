@@ -24,7 +24,7 @@ def df_processor(df):
     df["price"] = df["price"].str.replace("zł", "").str.replace("\xa0", "").str.replace(",", ".").str.strip()
     df["price"] = df["price"].astype(float)
     df["quantity"] = df["quantity"].astype(int)
-    df = df[df["quantity"].notnull() & (df["quantity"] > 0)]
+    #df = df[df["quantity"].notnull() & (df["quantity"] > 0)]
     df = df[df["price"].notnull()].copy()
     df["ean"] = df["ean"].astype(str)
     df["tax_rate"] = df["tax_rate"].apply(parse_tax_rate)
