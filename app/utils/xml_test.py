@@ -2,10 +2,9 @@ import unittest
 import xml.etree.ElementTree as ET
 import io
 import sys
-import logging
+from utils.logger import get_technical_logger
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = get_technical_logger(__name__)
 
 class TestXMLStructure(unittest.TestCase):
     def setUp(self):
@@ -21,13 +20,13 @@ class TestXMLStructure(unittest.TestCase):
     def test_xml_structure(self):
         for xml_file in self.xml_files:
             with self.subTest(xml_file=xml_file):
-                logging.info(f"Testing file: {xml_file}")
+                logger.info(f"Testing file: {xml_file}")
                 tree = ET.parse(xml_file)
                 root = tree.getroot()
                 
                 # Ensure root is <products>
                 self.assertEqual(root.tag, "products", "Root element should be <products>")
-                logging.debug(f"Root element: {root.tag}")
+                logger.debug(f"Root element: {root.tag}")
                 
                 elem_correct1 = 0
                 elem_correct2 = 0
@@ -35,7 +34,7 @@ class TestXMLStructure(unittest.TestCase):
                 # Check each <product> element
                 for product in root.findall("product"):
                     tags = {child.tag for child in product}
-                    #logging.debug(f"Product tags: {tags}")
+                    #logger.debug(f"Product tags: {tags}")
 
                     # Check if all expected tags are present
                     self.assertTrue(self.expected_tags.issubset(tags), "Some expected tags are missing")
@@ -44,8 +43,8 @@ class TestXMLStructure(unittest.TestCase):
                     # Check if there are no unexpected tags
                     self.assertTrue(tags.issubset(self.expected_tags), "Unexpected tags found in XML")
                     elem_correct2 += 1
-                logging.info(f"Correct elements (all expected tags): {elem_correct1}")
-                logging.info(f"Correct elements (no unexpected tags): {elem_correct2}")
+                logger.info(f"Correct elements (all expected tags): {elem_correct1}")
+                logger.info(f"Correct elements (no unexpected tags): {elem_correct2}")
 
 def run_tests():
     """Run the XML structure test and return the results as a string."""

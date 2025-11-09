@@ -2,3 +2,7 @@
 .venv/
 .env
 .vscode/
+*.log
+app/logs/
+__pycache__/
+*.pyc

@@ -23,33 +23,33 @@ def load_file_to_ftp(file_path, ftp_host, ftp_user, ftp_password):
     attempt = 0
     max_attempts = 5
     while attempt < max_attempts:
-        logger.info(f"Attempt {attempt + 1} of {max_attempts}")
+        logger.debug(f"Attempt {attempt + 1} of {max_attempts}")
 
-        logger.info(f"Calculating MD5 for local file: {file_path}")
+        logger.debug(f"Calculating MD5 for local file: {file_path}")
         local_md5 = calculate_md5(file_path)
-        logger.info(f"Local MD5: {local_md5}")
+        logger.debug(f"Local MD5: {local_md5}")
 
         ftp = FTP(ftp_host)
         ftp.login(user=ftp_user, passwd=ftp_password)
-        logger.info(f"Connected to FTP server: {ftp_host}")
+        logger.debug(f"Connected to FTP server: {ftp_host}")
 
         with open(file_path, 'rb') as xml_file:
             logger.info(f"Uploading file to FTP: {file_path}")
             ftp.storbinary(f"STOR {os.path.basename(file_path)}", xml_file, 1024)
             logger.info(f"File uploaded: {file_path}")
 
-        logger.info(f"Calculating MD5 for remote file: {os.path.basename(file_path)}")
+        logger.debug(f"Calculating MD5 for remote file: {os.path.basename(file_path)}")
         remote_md5 = get_remote_md5(ftp, os.path.basename(file_path))
-        logger.info(f"Remote MD5: {remote_md5}")
+        logger.debug(f"Remote MD5: {remote_md5}")
 
         ftp.quit()
-        logger.info("FTP connection closed")
+        logger.debug("FTP connection closed")
 
         if local_md5 == remote_md5:
             logger.info("File transfer successful: checksums match")
             break
         else:
-            logger.error("File transfer failed: checksum mismatch")
+            logger.warning("File transfer failed: checksum mismatch")
             attempt += 1
             if attempt == max_attempts:
                 raise ValueError("File transfer failed after multiple attempts: checksum mismatch")

@@ -3,3 +3,6 @@ pandas==2.2.3
 streamlit==1.42.2
 psycopg2-binary
 apscheduler==3.11.0
+click==8.1.7
+rich==13.9.4
+tabulate==0.9.0

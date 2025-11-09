@@ -1,4 +1,3 @@
-import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
@@ -9,26 +8,62 @@ import time
 import os
 import sys
 import pytz
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
 from utils.parser_manager import run_batch_task
 from utils.etl import run_etl_task
+from utils.logger import get_technical_logger, get_user_logger
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-# Create separate loggers
-job_logger = logging.getLogger('job_execution')
-scheduler_logger = logging.getLogger('scheduler_maintenance')
+# Create loggers
+job_logger = get_technical_logger('job_execution')
+scheduler_logger = get_technical_logger('scheduler_maintenance')
+user_logger = get_user_logger('batch')
+console = Console()
 
 def execute_job(job_id, name, parameters):
-    job_logger.info(f"-- Executing Job {job_id}: {name} with parameters {parameters}")
-    if name == "HomeGarden":
-        run_batch_task(1)
-    if name == "ETL_import_product_ids":
-        run_etl_task(name, parameters)
-    job_logger.info(f"-- Job execution ended")
+    job_logger.info(f"Executing Job {job_id}: {name} with parameters {parameters}")
+    
+    # Create execution summary table
+    table = Table(title="Job Execution", box=box.ROUNDED, show_header=False)
+    table.add_column("Property", style="bold cyan")
+    table.add_column("Value", style="white")
+    table.add_row("Job ID", str(job_id))
+    table.add_row("Job Name", name)
+    table.add_row("Status", "[yellow]Running[/yellow]")
+    console.print(table)
+    
+    try:
+        if name == "HomeGarden":
+            run_batch_task(1)
+        if name == "ETL_import_product_ids":
+            run_etl_task(name, parameters)
+        
+        # Update table with success
+        table = Table(title="Job Execution Complete", box=box.ROUNDED, show_header=False)
+        table.add_column("Property", style="bold cyan")
+        table.add_column("Value", style="white")
+        table.add_row("Job ID", str(job_id))
+        table.add_row("Job Name", name)
+        table.add_row("Status", "[green]✓ Completed[/green]")
+        console.print(table)
+        
+        job_logger.info(f"Job {job_id} execution completed successfully")
+    except Exception as e:
+        # Update table with error
+        table = Table(title="Job Execution Failed", box=box.ROUNDED, show_header=False)
+        table.add_column("Property", style="bold cyan")
+        table.add_column("Value", style="white")
+        table.add_row("Job ID", str(job_id))
+        table.add_row("Job Name", name)
+        table.add_row("Status", f"[red]✗ Failed: {str(e)}[/red]")
+        console.print(table)
+        
+        job_logger.error(f"Job {job_id} execution failed: {str(e)}", exc_info=True)
+        raise
 
 
 scheduler = BackgroundScheduler()
@@ -59,9 +94,16 @@ def schedule_jobs():
     # Define the desired timezone
     timezone = pytz.timezone(os.getenv('SCHEDULER_TIMEZONE', 'UTC'))
 
+    # Create table for scheduled jobs
+    table = Table(title="Scheduled Jobs", box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("Job ID", style="yellow")
+    table.add_column("Name", style="white")
+    table.add_column("Schedule", style="green")
+    table.add_column("Status", style="cyan")
+
     for job in jobs:
         job_id, name, schedule, parameters, active = job
-        scheduler_logger.info(f"Scheduling job {job_id} with schedule {schedule} and parameters {parameters}")
+        scheduler_logger.debug(f"Scheduling job {job_id} with schedule {schedule} and parameters {parameters}")
         scheduler.add_job(
             execute_job,
             CronTrigger.from_crontab(schedule, timezone=timezone),
@@ -69,6 +111,11 @@ def schedule_jobs():
             id=str(job_id),
             misfire_grace_time=300  # Allow a 5-minute grace period for missed jobs
         )
+        table.add_row(str(job_id), name, schedule, "Active" if active else "Inactive")
+    
+    if jobs:
+        console.print(table)
+    scheduler_logger.info(f"Scheduled {len(jobs)} jobs")
 
 def get_jobs_hash(jobs):
     """Generate a hash for the list of jobs."""
@@ -86,7 +133,7 @@ def check_for_job_changes():
         schedule_jobs()
         last_jobs_hash = current_jobs_hash
     else:
-        scheduler_logger.info("No changes in jobs detected.")
+        scheduler_logger.debug("No changes in jobs detected.")
 
 # Initial scheduling
 last_jobs_hash = get_jobs_hash(fetch_jobs())

@@ -1,9 +1,8 @@
 import xml.etree.ElementTree as ET
 import pandas as pd
-import logging
+from utils.logger import get_technical_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_technical_logger(__name__)
 
 def parse_xml_to_dict(xml_content, mapping):
     root = ET.fromstring(xml_content)
@@ -39,7 +38,7 @@ def parse_df_to_result_xml(df):
     df = df.rename(columns={"gross_price": "price"})
     df["tax_rate"] = df["tax_rate"] * 100
 
-    logger.info(f"First row: {df.iloc[0]}")
+    logger.debug(f"First row: {df.iloc[0]}")
     # conversion to xml
     root = ET.Element("products")
     for _, row in df.iterrows():

@@ -1,9 +1,8 @@
 import psycopg2
 import os
-import logging
+from utils.logger import get_technical_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_technical_logger(__name__)
 
 db_conn = psycopg2.connect(
         dbname=os.getenv('POSTGRES_DB', 'db'),
@@ -29,11 +28,9 @@ def get_config_settings(config_id) -> tuple:
     return result #config_name, config_settings, config_url
 
 def update_margin(config_id, ean, margin):
-    logger.info(f"Updating margin: {config_id}|{ean}|{margin}")
+    logger.debug(f"Updating margin: config_id={config_id}, ean={ean}, margin={margin}")
     # check if margin for ean exists:
     cursor = db_conn.cursor()
-    print(f"EAN = {ean}")
-    print(f"EAN = {margin}")
     cursor.execute("SELECT * FROM margin_data WHERE configs_id = %s AND ean = %s", (config_id, ean))
     if cursor.rowcount == 0:
         cursor.execute("INSERT INTO margin_data (configs_id, ean, margin) VALUES (%s, %s, %s)", (config_id, ean, margin))
